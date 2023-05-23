@@ -12,13 +12,13 @@ fn linspace(a: f64, b: f64, n: i32) -> Vec<f64> {
     vec
 }
 
-pub fn generate_symmetric_xcoords(chord_length: f64, num: i32) -> Vec<f64>{
+fn generate_symmetric_xcoords(chord_length: f64, num: i32) -> Vec<f64> {
     let pi = std::f64::consts::PI;
     let start_value: f64 = 0.0;
     let radius = 0.5 * chord_length;
     let num_coordinates: i32 = if num % 2 != 0 { num } else { num + 1 }; // Force odd number of coords.
     let mut x_coordinates: Vec<f64> = Vec::<f64>::with_capacity(num_coordinates as usize);
-    for index in 0..num_coordinates {
+    for _ in 0..num_coordinates {
         x_coordinates.push(0.0);
     }
     let upper_theta_values = crate::linspace(start_value, pi, num / 2 + 1); // Airfoil top contains both endpoints.
@@ -28,6 +28,22 @@ pub fn generate_symmetric_xcoords(chord_length: f64, num: i32) -> Vec<f64>{
         x_coordinates[(num - index - 1) as usize] = temp_value;
     }
     x_coordinates
+}
+
+fn generate_yt(t: f64, x_coordinates: Vec<f64>) -> Vec<f64> {
+    let num = x_coordinates.len();
+    let yt = Vec::<f64>::with_capacity(num as usize);
+    for item in x_coordinates {
+        let current_calc = (t / 0.2) * (0.29690*item.sqrt() - 0.126 * item - 0.3516 * item.powf(2.0) + 0.2843 * item.powf(3.0) - 0.1015 * item.powf(4.0));
+        yt.push(current_calc);
+    }
+    yt
+}
+
+pub fn generate_airfoil_boundary(m: f64, p: f64, t: f64, c: f64, num: i32) -> Vec<f64> {
+    let skip_pivot = num / 2 + 1; // Below this index is x_upper, above it is x_lower.
+    x_coordinates = generate_symmetric_xcoords(c, num);
+    y_thickness = generate_yt(x_coordinates);
 }
 
 #[cfg(test)]
@@ -54,7 +70,11 @@ mod tests {
     fn can_generate_xcoords() {
         let n = 13;
         let x = crate::generate_symmetric_xcoords(1.0, n);
-        assert_eq!(x, [1.0, 0.9330, 0.75, 0.5, 0.25, 0.06698, 0.0, 0.06698, 0.25, 0.5, 0.75, 0.9330, 1.0]);
+        let test_against: Vec<f64> = [1.0, 0.9330, 0.75, 0.5, 0.25, 0.06698, 0.0, 0.06698, 0.25, 0.5, 0.75, 0.9330, 1.0].to_vec();
+        let delta = 0.0001;
+        for index in 0..n {
+            assert!((x[index as usize]-test_against[index as usize]).abs() < delta)
+        }
     }
 
 }

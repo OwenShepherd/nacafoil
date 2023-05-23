@@ -53,7 +53,3 @@
 //         (constants::A3 * (x / chord_length).powf(3.0)) + 
 //         (constants::A4 * (x / chord_length).powf(4.0)))
 // }
-
-// #[cfg(test)]
-// mod tests {
-// }
