@@ -27,7 +27,7 @@ fn generate_symmetric_xcoords(chord_length: f64, num: i32) -> Vec<f64> {
     x_coordinates
 }
 
-fn generate_yt(t: f64, x_coordinates: Vec<f64>) -> Vec<f64> {
+fn generate_yt(t: f64, x_coordinates: &Vec<f64>) -> Vec<f64> {
     let num = x_coordinates.len();
     let mut yt = Vec::<f64>::with_capacity(num as usize);
     for item in x_coordinates {
@@ -58,7 +58,7 @@ pub fn generate_airfoil_boundary(m: f64, p: f64, t: f64, c: f64, num: i32) -> Ve
     let num_coordinates: i32 = if num % 2 != 0 { num } else { num + 1 }; // Force odd number of coords.
     let mut boundary = Vec::<(f64, f64)>::with_capacity(num_coordinates as usize);
     let x_coordinates = generate_symmetric_xcoords(c, num_coordinates);
-    let y_thickness = generate_yt(t, x_coordinates);
+    let y_thickness = generate_yt(t, &x_coordinates);
     for index in 0..num_coordinates {
         let current_x = x_coordinates[index as usize];
         let current_yt = y_thickness[index as usize];
@@ -107,5 +107,29 @@ mod tests {
             assert!((x[index as usize]-test_against[index as usize]).abs() < delta)
         }
     }
+    #[test]
+    fn generate_naca2412_boundary() {
+        // Boundary data from Keuthe and Chow, 1998 edition, end of section 5.10
+        let test_against: Vec<(f64, f64)> = [
+            (0.9665, -0.0025),
+            (0.8415, -0.0110),
+            (0.6250, -0.0250),
+            (0.3750, -0.0375),
+            (0.1585, -0.0375),
+            (0.0335, -0.0165),
+            (0.0335, 0.0225),
+            (0.1585, 0.0605),
+            (0.3750, 0.0740),
+            (0.6250, 0.0580),
+            (0.8415, 0.0285),
+            (0.9665, 0.0065),
+            (0.9665, -0.0025)].to_vec();
+        let n = 13;
+        let t: f64 = 0.12;
+        let c: f64 = 1.0;
+        let m: f64 = 0.02;
+        let p: f64 = 0.4;
+        let naca_boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
+        assert_eq!(naca_boundary, test_against);
+    }
 }
-
