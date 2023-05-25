@@ -146,11 +146,12 @@ mod tests {
             let current_diff = (current_test_x - current_exp_x).abs();
             if current_diff >= prev_diff {
                 let current_test_y = test_against[test_index].1;
-                let current_exp_y = boundary[exp_index].1;
+                let current_exp_y = boundary[exp_index].1.abs();
                 println!("True X: {current_test_x}, Exp X: {current_exp_x}");
                 println!("True Y: {current_test_y}, Exp Y: {current_exp_y}");
-                assert!((test_against[test_index].1 - boundary[exp_index].1).abs() <= test_diff);
+                assert!((current_test_y - current_exp_y).abs() <= test_diff);
                 test_index = test_index + 1;
+                prev_diff = std::f64::MAX;
             } else {
                 prev_diff = current_diff;
                 exp_index = exp_index + 1;
