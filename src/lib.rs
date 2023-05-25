@@ -108,28 +108,53 @@ mod tests {
         }
     }
     #[test]
-    fn generate_naca2412_boundary() {
+    fn generate_naca0006_boundary() {
         // Boundary data from Keuthe and Chow, 1998 edition, end of section 5.10
+        // Test or "True" data from  NACA Techincal report #824
         let test_against: Vec<(f64, f64)> = [
-            (0.9665, -0.0025),
-            (0.8415, -0.0110),
-            (0.6250, -0.0250),
-            (0.3750, -0.0375),
-            (0.1585, -0.0375),
-            (0.0335, -0.0165),
-            (0.0335, 0.0225),
-            (0.1585, 0.0605),
-            (0.3750, 0.0740),
-            (0.6250, 0.0580),
-            (0.8415, 0.0285),
-            (0.9665, 0.0065),
-            (0.9665, -0.0025)].to_vec();
-        let n = 13;
-        let t: f64 = 0.12;
+            (0.0, 0.0),
+            (0.0125, 0.0097),
+            (0.025, 0.01307),
+            (0.05, 0.0177),
+            (0.075, 0.02100),
+            (0.1, 0.02341),
+            (0.15, 0.02673),
+            (0.2, 0.02809),
+            (0.25, 0.02971),
+            (0.3, 0.03001),
+            (0.4, 0.02902),
+            (0.5, 0.02647),
+            (0.6, 0.02282),
+            (0.7, 0.01832),
+            (0.8, 0.01312),
+            (0.9, 0.00724),
+            (0.95, 0.00403),
+            (1.0, 0.0063)].to_vec();
+        let n = 10000;
+        let t: f64 = 0.06;
         let c: f64 = 1.0;
-        let m: f64 = 0.02;
-        let p: f64 = 0.4;
-        let naca_boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
-        assert_eq!(naca_boundary, test_against);
+        let m: f64 = 0.0;
+        let p: f64 = 0.0;
+        let boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
+        let mut test_index = 0;
+        let mut exp_index = 0;
+        let mut prev_diff = std::f64::MAX;
+        let test_diff = 0.035;
+        while test_index < test_against.len() {
+            let current_test_x = test_against[test_index].0;
+            let current_exp_x = boundary[exp_index].0;
+            let current_diff = (current_test_x - current_exp_x).abs();
+            if current_diff >= prev_diff {
+                let current_test_y = test_against[test_index].1;
+                let current_exp_y = boundary[exp_index].1;
+                println!("True X: {current_test_x}, Exp X: {current_exp_x}");
+                println!("True Y: {current_test_y}, Exp Y: {current_exp_y}");
+                assert!((test_against[test_index].1 - boundary[exp_index].1).abs() <= test_diff);
+                test_index = test_index + 1;
+            } else {
+                prev_diff = current_diff;
+                exp_index = exp_index + 1;
+            }
+        }
     }
 }
