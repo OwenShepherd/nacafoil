@@ -109,7 +109,6 @@ mod tests {
     }
     #[test]
     fn generate_naca0006_boundary() {
-        // Boundary data from Keuthe and Chow, 1998 edition, end of section 5.10
         // Test or "True" data from  NACA Techincal report #824
         let test_against: Vec<(f64, f64)> = [
             (0.0, 0.0),
@@ -144,7 +143,7 @@ mod tests {
             let current_test_x = test_against[test_index].0;
             let current_exp_x = boundary[exp_index].0;
             let current_diff = (current_test_x - current_exp_x).abs();
-            if current_diff >= prev_diff {
+            if current_diff >= prev_diff || (exp_index as i32==(n-1) && current_diff <= prev_diff) {
                 let current_test_y = test_against[test_index].1;
                 let current_exp_y = boundary[exp_index].1.abs();
                 println!("True X: {current_test_x}, Exp X: {current_exp_x}");
