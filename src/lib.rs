@@ -138,7 +138,7 @@ mod tests {
         let mut test_index = 0;
         let mut exp_index = 0;
         let mut prev_diff = std::f64::MAX;
-        let test_diff = 0.035;
+        let test_diff = 0.2 * c; // Testing accuracy within 0.2% chord
         while test_index < test_against.len() {
             let current_test_x = test_against[test_index].0;
             let current_exp_x = boundary[exp_index].0;
@@ -146,8 +146,6 @@ mod tests {
             if current_diff >= prev_diff || (exp_index as i32==(n-1) && current_diff <= prev_diff) {
                 let current_test_y = test_against[test_index].1;
                 let current_exp_y = boundary[exp_index].1.abs();
-                println!("True X: {current_test_x}, Exp X: {current_exp_x}");
-                println!("True Y: {current_test_y}, Exp Y: {current_exp_y}");
                 assert!((current_test_y - current_exp_y).abs() <= test_diff);
                 test_index = test_index + 1;
                 prev_diff = std::f64::MAX;

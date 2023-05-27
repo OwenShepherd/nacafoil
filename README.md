@@ -15,3 +15,6 @@ fn generate_naca0006_boundary() {
 }
 ```
 The return is a list of tuples [(x0, y0), (x1, y1), ...].
+
+I have tested the NACA 0006 results against NACA Techincal report #824. Nothing
+else has been tested.
