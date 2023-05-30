@@ -128,7 +128,7 @@ mod tests {
             (0.8, 0.01312),
             (0.9, 0.00724),
             (0.95, 0.00403),
-            (1.0, 0.0063)].to_vec();
+            (1.0, 0.00063)].to_vec();
         let n = 10000;
         let t: f64 = 0.06;
         let c: f64 = 1.0;
@@ -138,7 +138,7 @@ mod tests {
         let mut test_index = 0;
         let mut exp_index = 0;
         let mut prev_diff = std::f64::MAX;
-        let test_diff = 0.2 * c; // Testing accuracy within 0.2% chord
+        let test_diff = 0.002 * c; // Testing accuracy within 0.2% chord
         while test_index < test_against.len() {
             let current_test_x = test_against[test_index].0;
             let current_exp_x = boundary[exp_index].0;
@@ -154,5 +154,53 @@ mod tests {
                 exp_index = exp_index + 1;
             }
         }
+    }
+    #[test]
+    fn generate_naca2412_boundary() {
+        let test_against: Vec<(f64, f64)> = [
+            (0.0000, 0.0000),
+            (0.0125, 0.0215),
+            (0.0250, 0.0299),
+            (0.0500, 0.0413),
+            (0.0750, 0.0496),
+            (0.1000, 0.0563),
+            (0.1500, 0.0661),
+            (0.2000, 0.0726),
+            (0.2500, 0.0767),
+            (0.3000, 0.0788),
+            (0.4000, 0.0780),
+            (0.5000, 0.0724),
+            (0.6000, 0.0636),
+            (0.7000, 0.0518),
+            (0.8000, 0.0375),
+            (0.9000, 0.0208),
+            (0.9500, 0.0114),
+            (1.0000, 0.0013)].to_vec();
+        let n = 10000;
+        let t: f64 = 0.12;
+        let c: f64 = 1.0;
+        let m: f64 = 0.02;
+        let p: f64 = 0.4;
+        let boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
+        let mut test_index = 0;
+        let mut exp_index = 0;
+        let mut prev_diff = std::f64::MAX;
+        let test_diff = 0.002 * c; // Testing accuracy within 0.2% chord
+        while test_index < test_against.len() {
+            let current_test_x = test_against[test_index].0;
+            let current_exp_x = boundary[exp_index].0;
+            let current_diff = (current_test_x - current_exp_x).abs();
+            if current_diff >= prev_diff || (exp_index as i32==(n-1) && current_diff <= prev_diff) {
+                let current_test_y = test_against[test_index].1;
+                let current_exp_y = boundary[exp_index].1.abs();
+                println!("Current Real X: {}, Current Exp X: {}\nCurrent Real Y: {}, Current Exp Y: {}", current_test_x, current_exp_x, current_test_y, current_exp_y);
+                assert!((current_test_y - current_exp_y).abs() <= test_diff);
+                test_index = test_index + 1;
+                prev_diff = std::f64::MAX;
+            } else {
+                prev_diff = current_diff;
+                exp_index = exp_index + 1;
+            }
+        }    
     }
 }
