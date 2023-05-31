@@ -37,19 +37,21 @@ fn generate_yt(t: f64, x_coordinates: &Vec<f64>) -> Vec<f64> {
     yt
 }
 
-fn slope_of_camber_line(m: f64, p: f64, x_div_c: f64, c: f64) -> f64 {
-    if x_div_c <= p {
-        return f64::atan((m*x_div_c*c/p.powf(2.0))*(-1.0/c)+(m/p.powf(2.0))*(2.0*p-x_div_c));
+fn slope_of_camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
+    let slope: f64;
+    if x_loc <= p*c {
+        slope = 2.0*m/p - 2.0*m*x_loc/c/p/p;
     } else {
-        return f64::atan((m*(c-x_div_c*c)/(1.0-p.powf(2.0)))*(1.0/c)+((-1.0*m)/(1.0-p.powf(2.0)))*(1.0+x_div_c-2.0*p));
+        slope = (m*c - m*x_loc)/(1.0-p)/(1.0-p)/c + (1.0+x_loc/c-2.0*p)*(-1.0*m/(1.0-p)/(1.0-p));
     }
+    f64::atan(slope)
 }
 
-fn camber_line(m: f64, p: f64, x_div_c: f64, c: f64) -> f64 {
-    if x_div_c <= p {
-        return m * (x_div_c*c)/p.powf(2.0) * (2.0 * p - x_div_c);
+fn camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
+    if x_loc <= p*c {
+        m * (x_loc)/p/p * (2.0 * p - x_loc/c)
     } else {
-        return m * (c - x_div_c*c) / (1.0-p).powf(2.0) * (1.0 + x_div_c - 2.0 * p);
+        m * (c - x_loc) / (1.0-p).powf(2.0) * (1.0 + x_loc/c - 2.0 * p)
     }
 }
 
@@ -62,8 +64,8 @@ pub fn generate_airfoil_boundary(m: f64, p: f64, t: f64, c: f64, num: i32) -> Ve
     for index in 0..num_coordinates {
         let current_x = x_coordinates[index as usize];
         let current_yt = y_thickness[index as usize];
-        let theta_m = slope_of_camber_line(m, p, current_x/c, c);
-        let current_yc = camber_line(m, p, current_x/c, c);
+        let theta_m = slope_of_camber_line(m, p, current_x, c);
+        let current_yc = camber_line(m, p, current_x, c);
         let current: (f64, f64);
         if index < skip_pivot {
             current = (current_x - current_yt*f64::sin(theta_m), current_yc + current_yt * f64::cos(theta_m));
@@ -176,13 +178,13 @@ mod tests {
             (0.9000, 0.0208),
             (0.9500, 0.0114),
             (1.0000, 0.0013)].to_vec();
-        let n = 10000;
+        let n = 1000000;
         let t: f64 = 0.12;
         let c: f64 = 1.0;
         let m: f64 = 0.02;
         let p: f64 = 0.4;
         let boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
-        let test_diff = 0.004 * c; // Testing accuracy within 0.2% chord
+        let test_diff = 0.002 * c; // Testing accuracy within 0.2% chord
         for test_item in test_against {
             let mut current_min = std::f64::MAX;
             let current_test_x = test_item.0;
