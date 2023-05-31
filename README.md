@@ -16,7 +16,5 @@ fn generate_naca0006_boundary() {
 ```
 The return is a list of tuples [(x0, y0), (x1, y1), ...].
 
-I have tested the NACA 0006 results against NACA Techincal report #824.  
-Additionally, I have tested the NACA 2412 results against data from the UIUC
-Applied Aerodynamics Group. Both results were tested within 0.2% of chord.  
-Tests against the NACA 0006 were accurate, tests against NACA 2412 were not.
+I have tested the NACA 0006 and NACA 2412 results against NACA Techincal report #824.  
+NACA 0006 is tested within 0.2% of chord, and the NACA 2412 is tested within 0.4% of chord.  

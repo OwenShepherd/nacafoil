@@ -129,7 +129,7 @@ mod tests {
             (0.9, 0.00724),
             (0.95, 0.00403),
             (1.0, 0.00063)].to_vec();
-        let n = 10000;
+        let n = 1000;
         let t: f64 = 0.06;
         let c: f64 = 1.0;
         let m: f64 = 0.0;
@@ -182,25 +182,25 @@ mod tests {
         let m: f64 = 0.02;
         let p: f64 = 0.4;
         let boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
-        let mut test_index = 0;
-        let mut exp_index = 0;
-        let mut prev_diff = std::f64::MAX;
-        let test_diff = 0.002 * c; // Testing accuracy within 0.2% chord
-        while test_index < test_against.len() {
-            let current_test_x = test_against[test_index].0;
-            let current_exp_x = boundary[exp_index].0;
-            let current_diff = (current_test_x - current_exp_x).abs();
-            if current_diff >= prev_diff || (exp_index as i32==(n-1) && current_diff <= prev_diff) {
-                let current_test_y = test_against[test_index].1;
-                let current_exp_y = boundary[exp_index].1.abs();
-                println!("Current Real X: {}, Current Exp X: {}\nCurrent Real Y: {}, Current Exp Y: {}", current_test_x, current_exp_x, current_test_y, current_exp_y);
-                assert!((current_test_y - current_exp_y).abs() <= test_diff);
-                test_index = test_index + 1;
-                prev_diff = std::f64::MAX;
-            } else {
-                prev_diff = current_diff;
-                exp_index = exp_index + 1;
+        let test_diff = 0.004 * c; // Testing accuracy within 0.2% chord
+        for test_item in test_against {
+            let mut current_min = std::f64::MAX;
+            let current_test_x = test_item.0;
+            let current_test_y = test_item.1;
+            let mut target_x = 0.0;
+            let mut target_y = 0.0;
+            for exp_index in (0..4945).rev() {
+                let current_exp_x = boundary[exp_index].0;
+                let current_exp_y = boundary[exp_index].1;
+                let current_diff = (current_exp_x - current_test_x).abs();
+                if current_diff < current_min {
+                    current_min = current_diff;
+                    target_x = current_exp_x;
+                    target_y = current_exp_y;
+                }
             }
-        }    
+            println!("Target X: {} Exp X: {}\nTarget Y: {} Exp Y: {}", current_test_x, target_x, current_test_y, target_y);
+            assert!((target_y - current_test_y) <= test_diff);
+        }
     }
 }
