@@ -1,3 +1,15 @@
+struct Airfoil {
+    upper_x: Vec<f64>,
+    upper_y: Vec<f64>,
+    lower_x: Vec<f64>,
+    lower_y: Vec<f64>,
+    max_camber: f64,
+    max_camber_location: f64,
+    thickness: f64,
+    chord_length: f64,
+    num: i32
+}
+
 fn linspace(a: f64, b: f64, n: i32) -> Vec<f64> {
     let delta = (b-a) / ((n - 1) as f64);
     let mut vec = Vec::<f64>::with_capacity(n as usize);
