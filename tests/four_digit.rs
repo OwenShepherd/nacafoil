@@ -1,4 +1,5 @@
 use serde_json::{Serialize, Deserialize};
+use std::path::PathBuf;
 use nacafoil;
 
 impl Deserialize for nacafoil::Airfoil {
