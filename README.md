@@ -16,5 +16,5 @@ fn generate_naca0006_boundary() {
     let lower_y = airfoil.lower_y;
 }
 ```
-Results are tested againt airfoil data in tests/data.json within 0.2 percent of chord.  
+Results are tested againt airfoil data in tests/data.json within 0.3 percent of chord.  
 All 4-digit airfoils from NACA #824 aside from 2424 and 4424 pass tests.

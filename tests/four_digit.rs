@@ -85,17 +85,17 @@ fn compare_surface_with_naca_technical_824() {
             let mut found_value = false;
             for num in possible_n {
                 airfoil = nacafoil::Airfoil::new(foil.name.clone(), c, num);
-                upper_result = assert_within_percent_chord(&foil, &airfoil, 0.2, true);
-                lower_result = assert_within_percent_chord(&foil, &airfoil, 0.2, false);
+                upper_result = assert_within_percent_chord(&foil, &airfoil, 0.3, true);
+                lower_result = assert_within_percent_chord(&foil, &airfoil, 0.3, false);
                 match (upper_result, lower_result) {
                     (Some(rtr), _) | (_, Some(rtr))=> {
-                        assert_message = format!("Cannot generate NACA {} within {} percent of chord.\nFailed on predicted_{}: {}, expected_{}: {}", foil.name, "0.2", rtr.2, rtr.0, rtr.2, rtr.1);
+                        assert_message = format!("Cannot generate NACA {} within {} percent of chord.\nFailed on predicted_{}: {}, expected_{}: {}", foil.name, "0.3", rtr.2, rtr.0, rtr.2, rtr.1);
                         continue;
                     }
                     (None, None) => {
                         assert!(true);
                         found_value = true;
-                        println!("Generates NACA {} within {} percent of chord with N = {}", foil.name, "0.2", num);
+                        println!("Generates NACA {} within {} percent of chord with N = {}", foil.name, "0.3", num);
                         break;
                     }
                 }

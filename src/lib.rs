@@ -103,7 +103,7 @@ fn generate_coordinates(num: i32, chord_length: f64) -> Vec<f64> {
 
 fn thickness_line(t: f64, c: f64, mut coordinate: f64) -> f64 {
     coordinate = coordinate / c;
-    (t / 0.2) * (0.29690*coordinate.sqrt() - 0.126 * coordinate - 0.3516 * coordinate.powf(2.0) + 0.2843 * coordinate.powf(3.0) - 0.1015 * coordinate.powf(4.0))
+    (t / 0.2) * (0.2969*coordinate.sqrt() - 0.1260 * coordinate - 0.3516 * coordinate.powf(2.0) + 0.2843 * coordinate.powf(3.0) - 0.1015 * coordinate.powf(4.0))
 }
 
 fn slope_of_camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
@@ -113,7 +113,7 @@ fn slope_of_camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
     } else {
         slope = (m*c - m*x_loc)/(1.0-p)/(1.0-p)/c + (1.0+x_loc/c-2.0*p)*(-1.0*m/(1.0-p)/(1.0-p));
     }
-    f64::atan(slope)
+    slope.atan()
 }
 
 fn camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
