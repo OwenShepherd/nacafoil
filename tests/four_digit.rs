@@ -58,8 +58,8 @@ fn assert_within_percent_chord(foil: &JSONFoil, airfoil: &nacafoil::Airfoil, per
     }
     let num = exp.len();
     for index in 0..num {
-        let current_test_x = exp[index].0;
-        let current_test_y = exp[index].1 * notch;
+        let current_test_x = exp[index].0 * airfoil.chord_length / 100.0;
+        let current_test_y = exp[index].1 * notch * airfoil.chord_length / 100.0;
         let predicted = find_closest(&predicted_x, &predicted_y, current_test_x);
         if (predicted.0 - current_test_x).abs() > percent / 100.0 * airfoil.chord_length {
             return Some((predicted.0, current_test_x, "x".to_string()));
