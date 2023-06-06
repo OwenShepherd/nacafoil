@@ -1,13 +1,78 @@
-struct Airfoil {
-    upper_x: Vec<f64>,
-    upper_y: Vec<f64>,
-    lower_x: Vec<f64>,
-    lower_y: Vec<f64>,
+pub struct Airfoil {
+    pub surface: Surface,
     max_camber: f64,
     max_camber_location: f64,
     thickness: f64,
-    chord_length: f64,
-    num: i32
+    pub chord_length: f64,
+    pub half_num: i32
+}
+
+pub struct Surface {
+    pub upper_x: Vec<f64>,
+    pub lower_x: Vec<f64>,
+    pub upper_y: Vec<f64>,
+    pub lower_y: Vec<f64>
+}
+
+impl Surface {
+    pub fn new(c: f64, n: i32) -> Self {
+        let coordinates = generate_coordinates(n, c);
+        Self {
+            upper_x: coordinates.clone(),
+            lower_x: coordinates,
+            upper_y: vec![0.0; n as usize],
+            lower_y: vec![0.0; n as usize]
+        }
+    }
+}
+
+impl Airfoil {
+    pub fn new(name: String, c: f64, n: i32) -> Self {
+        let m: f64 = ((name.as_bytes()[0] as char).to_digit(10).unwrap() as f64) / 100.0;
+        let p: f64 = ((name.as_bytes()[1] as char).to_digit(10).unwrap() as f64) / 10.0;
+        let t: f64 = name[2..4].parse::<f64>().unwrap() / 100.0;
+        let real_num = if n % 2 == 0 { n } else { n + 1 };
+        let mut airfoil = Self {
+            max_camber: m,
+            max_camber_location: p,
+            thickness: t,
+            chord_length: c,
+            half_num: real_num / 2,
+            surface: Surface::new(c, real_num / 2)
+        };
+        airfoil.generate_surface();
+        airfoil
+    }
+    fn generate_surface(&mut self) {
+        self.generate_surface_aux(true);
+        self.generate_surface_aux(false);
+    }
+    fn generate_surface_aux(&mut self,  upper: bool) {
+        let direction: f64 = if upper { -1.0 } else { 1.0 };
+        let ordinates: &mut Vec<f64> = if upper { &mut self.surface.upper_y } else { &mut self.surface.lower_y };
+        let coordinates: &mut Vec<f64> = if upper { &mut self.surface.upper_x } else { &mut self.surface.lower_x };
+        let m = self.max_camber;
+        let p = self.max_camber_location;
+        let t = self.thickness;
+        let c = self.chord_length;
+        for index in 0..self.half_num as usize {
+            let coordinate = coordinates[index];
+            let thickness = thickness_line(t, c, coordinate);
+            let theta_m;
+            let camber;
+            if m==0.0 && p==0.0 {
+                theta_m = 0.0;
+                camber = 0.0;
+            } else {
+                theta_m = slope_of_camber_line(m, p, coordinate, c);
+                camber = camber_line(m, p, coordinate, c);    
+            }
+            let new_coordinate = coordinate + (1.0 * direction) * thickness*f64::sin(theta_m);
+            let new_ordinate = camber + thickness * (-1.0 * direction) * f64::cos(theta_m);
+            coordinates[index] = new_coordinate;
+            ordinates[index] = new_ordinate;
+        }
+    }
 }
 
 fn linspace(a: f64, b: f64, n: i32) -> Vec<f64> {
@@ -22,31 +87,23 @@ fn linspace(a: f64, b: f64, n: i32) -> Vec<f64> {
     vec
 }
 
-fn generate_symmetric_xcoords(chord_length: f64, num: i32) -> Vec<f64> {
+fn generate_coordinates(num: i32, chord_length: f64) -> Vec<f64> {
+    // num_coordinates should be even
     let pi = std::f64::consts::PI;
     let start_value: f64 = 0.0;
     let radius = 0.5 * chord_length;
-    let mut x_coordinates: Vec<f64> = Vec::<f64>::with_capacity(num as usize);
-    for _ in 0..num {
-        x_coordinates.push(0.0);
-    }
-    let upper_theta_values = crate::linspace(start_value, pi, num / 2 + 1); // Airfoil top contains both endpoints.
-    for index in 0..(num/2) {
+    let upper_theta_values = crate::linspace(start_value, pi, num); // Airfoil top contains both endpoints.
+    let mut theta_values = Vec::<f64>::with_capacity(num as usize);
+    for index in (0..num).rev() {
         let temp_value = radius + radius * f64::cos(upper_theta_values[index as usize]);
-        x_coordinates[index as usize] = temp_value;
-        x_coordinates[(num - index - 1) as usize] = temp_value;
+        theta_values.push(temp_value);
     }
-    x_coordinates
+    theta_values
 }
 
-fn generate_yt(t: f64, x_coordinates: &Vec<f64>) -> Vec<f64> {
-    let num = x_coordinates.len();
-    let mut yt = Vec::<f64>::with_capacity(num as usize);
-    for item in x_coordinates {
-        let current_calc = (t / 0.2) * (0.29690*item.sqrt() - 0.126 * item - 0.3516 * item.powf(2.0) + 0.2843 * item.powf(3.0) - 0.1015 * item.powf(4.0));
-        yt.push(current_calc);
-    }
-    yt
+fn thickness_line(t: f64, c: f64, mut coordinate: f64) -> f64 {
+    coordinate = coordinate / c;
+    (t / 0.2) * (0.29690*coordinate.sqrt() - 0.126 * coordinate - 0.3516 * coordinate.powf(2.0) + 0.2843 * coordinate.powf(3.0) - 0.1015 * coordinate.powf(4.0))
 }
 
 fn slope_of_camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
@@ -65,30 +122,6 @@ fn camber_line(m: f64, p: f64, x_loc: f64, c: f64) -> f64 {
     } else {
         m * (c - x_loc) / (1.0-p).powf(2.0) * (1.0 + x_loc/c - 2.0 * p)
     }
-}
-
-pub fn generate_airfoil_boundary(m: f64, p: f64, t: f64, c: f64, num: i32) -> Vec<(f64, f64)> {
-    let skip_pivot = num / 2 + 1; // Below this index is x_upper, above it is x_lower.
-    let num_coordinates: i32 = if num % 2 != 0 { num } else { num + 1 }; // Force odd number of coords.
-    let mut boundary = Vec::<(f64, f64)>::with_capacity(num_coordinates as usize);
-    let x_coordinates = generate_symmetric_xcoords(c, num_coordinates);
-    let y_thickness = generate_yt(t, &x_coordinates);
-    for index in 0..num_coordinates {
-        let current_x = x_coordinates[index as usize];
-        let current_yt = y_thickness[index as usize];
-        let theta_m = slope_of_camber_line(m, p, current_x, c);
-        let current_yc = camber_line(m, p, current_x, c);
-        let current: (f64, f64);
-        if index < skip_pivot {
-            current = (current_x - current_yt*f64::sin(theta_m), current_yc + current_yt * f64::cos(theta_m));
-        } else if index > skip_pivot {
-            current = (current_x + current_yt*f64::sin(theta_m), current_yc - current_yt * f64::cos(theta_m));
-        } else {
-            current = (0.0, 0.0);
-        }
-        boundary.push(current);
-    }
-    boundary
 }
 
 #[cfg(test)]
@@ -110,111 +143,5 @@ mod tests {
         let n = 5;
         let exp_vec = linspace(a,b,n);
         assert_eq!(exp_vec, [1.0, 0.75, 0.5, 0.25, 0.0]);
-    }
-    #[test]
-    fn can_generate_xcoords() {
-        let n = 13;
-        let x = crate::generate_symmetric_xcoords(1.0, n);
-        let test_against: Vec<f64> = [1.0, 0.9330, 0.75, 0.5, 0.25, 0.06698, 0.0, 0.06698, 0.25, 0.5, 0.75, 0.9330, 1.0].to_vec();
-        let delta = 0.0001;
-        for index in 0..n {
-            assert!((x[index as usize]-test_against[index as usize]).abs() < delta)
-        }
-    }
-    #[test]
-    fn generate_naca0006_boundary() {
-        // Test or "True" data from  NACA Techincal report #824
-        let test_against: Vec<(f64, f64)> = [
-            (0.0, 0.0),
-            (0.0125, 0.0097),
-            (0.025, 0.01307),
-            (0.05, 0.0177),
-            (0.075, 0.02100),
-            (0.1, 0.02341),
-            (0.15, 0.02673),
-            (0.2, 0.02809),
-            (0.25, 0.02971),
-            (0.3, 0.03001),
-            (0.4, 0.02902),
-            (0.5, 0.02647),
-            (0.6, 0.02282),
-            (0.7, 0.01832),
-            (0.8, 0.01312),
-            (0.9, 0.00724),
-            (0.95, 0.00403),
-            (1.0, 0.00063)].to_vec();
-        let n = 1000;
-        let t: f64 = 0.06;
-        let c: f64 = 1.0;
-        let m: f64 = 0.0;
-        let p: f64 = 0.0;
-        let boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
-        let mut test_index = 0;
-        let mut exp_index = 0;
-        let mut prev_diff = std::f64::MAX;
-        let test_diff = 0.002 * c; // Testing accuracy within 0.2% chord
-        while test_index < test_against.len() {
-            let current_test_x = test_against[test_index].0;
-            let current_exp_x = boundary[exp_index].0;
-            let current_diff = (current_test_x - current_exp_x).abs();
-            if current_diff >= prev_diff || (exp_index as i32==(n-1) && current_diff <= prev_diff) {
-                let current_test_y = test_against[test_index].1;
-                let current_exp_y = boundary[exp_index].1.abs();
-                assert!((current_test_y - current_exp_y).abs() <= test_diff);
-                test_index = test_index + 1;
-                prev_diff = std::f64::MAX;
-            } else {
-                prev_diff = current_diff;
-                exp_index = exp_index + 1;
-            }
-        }
-    }
-    #[test]
-    fn generate_naca2412_boundary() {
-        let test_against: Vec<(f64, f64)> = [
-            (0.0000, 0.0000),
-            (0.0125, 0.0215),
-            (0.0250, 0.0299),
-            (0.0500, 0.0413),
-            (0.0750, 0.0496),
-            (0.1000, 0.0563),
-            (0.1500, 0.0661),
-            (0.2000, 0.0726),
-            (0.2500, 0.0767),
-            (0.3000, 0.0788),
-            (0.4000, 0.0780),
-            (0.5000, 0.0724),
-            (0.6000, 0.0636),
-            (0.7000, 0.0518),
-            (0.8000, 0.0375),
-            (0.9000, 0.0208),
-            (0.9500, 0.0114),
-            (1.0000, 0.0013)].to_vec();
-        let n = 1000000;
-        let t: f64 = 0.12;
-        let c: f64 = 1.0;
-        let m: f64 = 0.02;
-        let p: f64 = 0.4;
-        let boundary = crate::generate_airfoil_boundary(m, p, t, c, n);
-        let test_diff = 0.002 * c; // Testing accuracy within 0.2% chord
-        for test_item in test_against {
-            let mut current_min = std::f64::MAX;
-            let current_test_x = test_item.0;
-            let current_test_y = test_item.1;
-            let mut target_x = 0.0;
-            let mut target_y = 0.0;
-            for exp_index in (0..4945).rev() {
-                let current_exp_x = boundary[exp_index].0;
-                let current_exp_y = boundary[exp_index].1;
-                let current_diff = (current_exp_x - current_test_x).abs();
-                if current_diff < current_min {
-                    current_min = current_diff;
-                    target_x = current_exp_x;
-                    target_y = current_exp_y;
-                }
-            }
-            println!("Target X: {} Exp X: {}\nTarget Y: {} Exp Y: {}", current_test_x, target_x, current_test_y, target_y);
-            assert!((target_y - current_test_y) <= test_diff);
-        }
     }
 }

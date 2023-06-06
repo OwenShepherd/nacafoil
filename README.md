@@ -4,16 +4,16 @@ NACA airfoil generation.
 ## Usage
 This can be used to generate boundary points for NACA 4-digit airfoils.  
 ```rust
-use crate::nacafoil::generate_airfoil_boundary;
+use crate::nacafoil::Airfoil;
 fn generate_naca0006_boundary() {
-    let n = 100;
-    let t: f64 = 0.06;
+    let n = 1000;
     let c: f64 = 1.0;
-    let m: f64 = 0.0;
-    let p: f64 = 0.0;
-    let boundaries = generate_airfoil_boundary(m, p, t, c, n);
+    let name: String = "0006".to_string();
+    let airfoil = Airfoil::new(name, c, n);
+    let upper_x = airfoil.upper_x;
+    let upper_y = airfoil.upper_y;
+    let lower_x = airfoil.lower_x;
+    let lower_y = airfoil.lower_y;
 }
 ```
-The return is a list of tuples [(x0, y0), (x1, y1), ...].
-
-I have tested the NACA 0006 and NACA 2412 results against NACA Techincal report #824 within 0.02% of chord.
+Results are test againts airfoil data in tests/data.json within 0.2 percent of chord.
