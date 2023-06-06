@@ -61,9 +61,9 @@ fn assert_within_percent_chord(foil: &JSONFoil, airfoil: &nacafoil::Airfoil, per
         let current_test_x = exp[index].0;
         let current_test_y = exp[index].1 * notch;
         let predicted = find_closest(&predicted_x, &predicted_y, current_test_x);
-        if (predicted.0 - current_test_x).abs() > percent / 100.0 {
+        if (predicted.0 - current_test_x).abs() > percent / 100.0 * airfoil.chord_length {
             return Some((predicted.0, current_test_x, "x".to_string()));
-        } else if (predicted.1 - current_test_y).abs() > percent / 100.0 {
+        } else if (predicted.1 - current_test_y).abs() > percent / 100.0 * airfoil.chord_length {
             return Some((predicted.1, current_test_y, "y".to_string()));
         }
     }
@@ -73,10 +73,11 @@ fn assert_within_percent_chord(foil: &JSONFoil, airfoil: &nacafoil::Airfoil, per
 #[test]
 fn compare_surface_with_naca_technical_824() {
     let foils = read_data().unwrap();
+    let mut found_values = Vec::<(bool, String)>::with_capacity(foils.len());
     for foil in foils {
         if foil.name.len() == 4 {
             let c: f64 = 1.0;
-            let possible_n: [i32; 5] = [100, 1000, 10000, 100000, 1000000];
+            let possible_n: [i32; 3] = [100, 1000, 10000];
             let mut upper_result;
             let mut lower_result;
             let mut assert_message: String = "".to_string();
@@ -100,10 +101,16 @@ fn compare_surface_with_naca_technical_824() {
                 }
             }
             if found_value {
+                found_values.push((found_value, "".to_string()));
                 continue;
             } else {
-                assert!(false, "{}", assert_message);
+                found_values.push((found_value, assert_message));
             }
+        }
+    }
+    for val in found_values {
+        if !val.0 {
+            assert!(false, "{}", val.1);
         }
     }
 }

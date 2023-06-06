@@ -3,7 +3,7 @@ pub struct Airfoil {
     max_camber: f64,
     max_camber_location: f64,
     thickness: f64,
-    chord_length: f64,
+    pub chord_length: f64,
     pub half_num: i32
 }
 
@@ -57,7 +57,7 @@ impl Airfoil {
         let c = self.chord_length;
         for index in 0..self.half_num as usize {
             let coordinate = coordinates[index];
-            let thickness = thickness_line(t, coordinate);
+            let thickness = thickness_line(t, c, coordinate);
             let theta_m;
             let camber;
             if m==0.0 && p==0.0 {
@@ -67,7 +67,7 @@ impl Airfoil {
                 theta_m = slope_of_camber_line(m, p, coordinate, c);
                 camber = camber_line(m, p, coordinate, c);    
             }
-            let new_coordinate = coordinate + (1.0 * direction) * coordinate*f64::sin(theta_m);
+            let new_coordinate = coordinate + (1.0 * direction) * thickness*f64::sin(theta_m);
             let new_ordinate = camber + thickness * (-1.0 * direction) * f64::cos(theta_m);
             coordinates[index] = new_coordinate;
             ordinates[index] = new_ordinate;
@@ -101,7 +101,8 @@ fn generate_coordinates(num: i32, chord_length: f64) -> Vec<f64> {
     theta_values
 }
 
-fn thickness_line(t: f64, coordinate: f64) -> f64 {
+fn thickness_line(t: f64, c: f64, mut coordinate: f64) -> f64 {
+    coordinate = coordinate / c;
     (t / 0.2) * (0.29690*coordinate.sqrt() - 0.126 * coordinate - 0.3516 * coordinate.powf(2.0) + 0.2843 * coordinate.powf(3.0) - 0.1015 * coordinate.powf(4.0))
 }
 
