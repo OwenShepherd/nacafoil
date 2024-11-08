@@ -1,8 +1,8 @@
 [package]
 name = "nacafoil"
-version = "0.0.5"
+version = "0.0.6"
 edition = "2021"
-license = "MIT"
+license = "MPL-2.0"
 description = "Programmatic drawing of NACA airfoils."
 repository = "https://github.com/OwenShepherd/nacafoil"
 homepage = "https://github.com/OwenShepherd/nacafoil"
